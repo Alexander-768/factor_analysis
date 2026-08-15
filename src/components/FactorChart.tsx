@@ -1,3 +1,31 @@
-import type{FactorContribution}from'../types';
-const pp=(v:number)=>`${v>=0?'+':''}${(v*100).toFixed(3)}`
-export function FactorChart({factors,delta,compact=false,displayGroupOrder}:{factors:FactorContribution[];delta:number;compact?:boolean;displayGroupOrder?:string[]}){const orderedFactors=displayGroupOrder?[...factors].sort((a,b)=>{const groupDiff=displayGroupOrder.indexOf(a.groupId)-displayGroupOrder.indexOf(b.groupId);return groupDiff||Number(a.type==='share')-Number(b.type==='share')}):factors;const bars=[...orderedFactors.map(f=>({...f,label:`${f.groupName} · ${f.type==='ctr'?'CTR':'доля'}`})),{groupId:'total',groupName:'Общее',type:'ctr' as const,value:delta,label:'Общее ΔCTR'}],max=Math.max(...bars.map(b=>Math.abs(b.value)),.0001),w=Math.max(680,bars.length*80),h=compact?250:330,zero=h*.5,scale=(h*.36)/max;return <div className="chart-wrap"><svg className="chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label="График вкладов факторов"><line x1="30" x2={w-20} y1={zero} y2={zero} className="zero"/><text x="30" y={zero-8} className="axis-label">0</text>{bars.map((b,i)=>{const x=48+i*(w-80)/bars.length,bh=Math.max(2,Math.abs(b.value)*scale),y=b.value>=0?zero-bh:zero;return <g key={`${b.groupId}-${b.type}-${i}`} className={`bar-group ${b.type} ${b.groupId==='total'?'overall':''}`}><title>{`${b.groupName} · ${b.type==='ctr'?'Влияние CTR':'Влияние доли'}: ${pp(b.value)} п.п.${Math.abs(delta)>.00001?` · ${(b.value/delta*100).toFixed(1)}% от ΔCTR`:''}`}</title><rect x={x} y={y} width="42" height={bh} rx="5"/><text x={x+21} y={b.value>=0?y-8:y+bh+15} className="value">{pp(b.value)}</text><text transform={`translate(${x+21},${h-8}) rotate(-35)`} className="label">{b.label}</text></g>})}</svg></div>}
+import type { FactorContribution } from "../types";
+
+const pp = (value: number) => `${value >= 0 ? "+" : ""}${(value * 100).toFixed(3)}`;
+
+type Props = {
+  factors: FactorContribution[];
+  delta: number;
+  compact?: boolean;
+  displayGroupOrder?: string[];
+  maxAbsValue?: number;
+};
+
+export function FactorChart({ factors, delta, compact = false, displayGroupOrder, maxAbsValue }: Props) {
+  const orderedFactors = displayGroupOrder
+    ? [...factors].sort((a, b) => {
+        const groupDifference = displayGroupOrder.indexOf(a.groupId) - displayGroupOrder.indexOf(b.groupId);
+        return groupDifference || Number(a.type === "share") - Number(b.type === "share");
+      })
+    : factors;
+  const bars = [
+    ...orderedFactors.map((factor) => ({
+      ...factor,
+      label: `${factor.groupName} · ${factor.type === "ctr" ? "CTR" : "доля"}`,
+    })),
+    { groupId: "total", groupName: "Общее", type: "ctr" as const, value: delta, label: "Общее ΔCTR" },
+  ];
+  const max = Math.max(maxAbsValue ?? 0, ...bars.map((bar) => Math.abs(bar.value)), 0.0001);
+  const width = Math.max(680, bars.length * 80), height = compact ? 250 : 330, zero = height * 0.5;
+  const scale = (height * 0.36) / max;
+  return <div className="chart-wrap"><svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="График вкладов факторов"><line x1="30" x2={width - 20} y1={zero} y2={zero} className="zero"/><text x="30" y={zero - 8} className="axis-label">0</text>{bars.map((bar, index) => {const x=48+index*(width-80)/bars.length,barHeight=Math.max(2,Math.abs(bar.value)*scale),y=bar.value>=0?zero-barHeight:zero;return <g key={`${bar.groupId}-${bar.type}-${index}`} className={`bar-group ${bar.type} ${bar.groupId === "total" ? "overall" : ""}`}><title>{`${bar.groupName} · ${bar.type === "ctr" ? "Влияние CTR" : "Влияние доли"}: ${pp(bar.value)} п.п.${Math.abs(delta)>.00001?` · ${(bar.value/delta*100).toFixed(1)}% от ΔCTR`:""}`}</title><rect x={x} y={y} width="42" height={barHeight} rx="5"/><text x={x+21} y={bar.value>=0?y-8:y+barHeight+15} className="value">{pp(bar.value)}</text><text transform={`translate(${x+21},${height-8}) rotate(-35)`} className="label">{bar.label}</text></g>})}</svg></div>;
+}

@@ -13,6 +13,17 @@ const initial: GroupInput[] = [
   { id: "c", name: "C", share1: 0.2, ctr1: 0.05, share2: 0.2, ctr2: 0.048 },
 ];
 type Method = "sequential" | "reference" | "symmetric";
+type MethodSimulationState = {
+  currentStep: number;
+  isPlaying: boolean;
+  hasStarted: boolean;
+  hasCompleted: boolean;
+};
+const createSimulationState = (): Record<Method, MethodSimulationState> => ({
+  sequential: { currentStep: 0, isPlaying: false, hasStarted: false, hasCompleted: false },
+  reference: { currentStep: 0, isPlaying: false, hasStarted: false, hasCompleted: false },
+  symmetric: { currentStep: 0, isPlaying: false, hasStarted: false, hasCompleted: false },
+});
 const methodInfo = {
   sequential: [
     "Последовательное разложение",
@@ -32,8 +43,7 @@ export default function App() {
     [method, setMethod] = useState<Method>("sequential"),
     [order, setOrder] = useState(initial.map((x) => x.id)),
     [reference, setReference] = useState("c"),
-    [step, setStep] = useState(0),
-    [playing, setPlaying] = useState(false),
+    [simulations, setSimulations] = useState(createSimulationState),
     [speed, setSpeed] = useState(1),
     [formulas, setFormulas] = useState(false),
     [compare, setCompare] = useState(false);
@@ -64,25 +74,39 @@ export default function App() {
     },
     result = results[method],
     c = common(groups);
-  useEffect(() => {
-    setStep(0);
-    setPlaying(false);
-  }, [method]);
+  const activeSimulation = simulations[method];
+  const step = Math.min(activeSimulation.currentStep, Math.max(0, result.steps.length - 1));
+  const playing = activeSimulation.isPlaying;
+  const updateSimulation = (
+    methodId: Method,
+    update: (state: MethodSimulationState) => MethodSimulationState,
+  ) => setSimulations((all) => ({ ...all, [methodId]: update(all[methodId]) }));
+  const selectMethod = (nextMethod: Method) => {
+    updateSimulation(method, (state) => ({ ...state, isPlaying: false }));
+    setMethod(nextMethod);
+  };
+  const updateGroups = (nextGroups: GroupInput[]) => {
+    setGroups(nextGroups);
+    setSimulations(createSimulationState());
+  };
   useEffect(() => {
     if (!playing) return;
     const t = setInterval(
       () =>
-        setStep((s) => {
-          if (s >= result.steps.length - 1) {
-            setPlaying(false);
-            return s;
-          }
-          return s + 1;
+        updateSimulation(method, (state) => {
+          const nextStep = Math.min(state.currentStep + 1, result.steps.length - 1);
+          return {
+            ...state,
+            currentStep: nextStep,
+            hasStarted: true,
+            hasCompleted: nextStep === result.steps.length - 1,
+            isPlaying: nextStep < result.steps.length - 1,
+          };
         }),
       1300 / speed,
     );
     return () => clearInterval(t);
-  }, [playing, speed, result.steps.length]);
+  }, [playing, speed, result.steps.length, method]);
   const move = (id: string, d: number) => {
     const i = order.indexOf(id),
       j = i + d;
@@ -135,7 +159,10 @@ export default function App() {
           </button>
           <button
             className={compare ? "active" : ""}
-            onClick={() => setCompare(true)}
+            onClick={() => {
+              updateSimulation(method, (state) => ({ ...state, isPlaying: false }));
+              setCompare(true);
+            }}
           >
             Сравнить методы
           </button>
@@ -155,9 +182,9 @@ export default function App() {
       <div className="workspace">
         <DataEditor
           groups={groups}
-          setGroups={setGroups}
+          setGroups={updateGroups}
           reset={() => {
-            setGroups(initial);
+            updateGroups(initial);
             setOrder(initial.map((x) => x.id));
             setReference("c");
           }}
@@ -170,16 +197,19 @@ export default function App() {
                 name: "Последовательный",
                 sub: `Порядок: ${order.map((id) => groups.find((g) => g.id === id)?.name).join(" → ")}`,
                 r: results.sequential,
+                completed: simulations.sequential.hasCompleted,
               },
               {
                 name: "Опорная группа",
                 sub: `База: ${groups.find((g) => g.id === reference)?.name}`,
                 r: results.reference,
+                completed: simulations.reference.hasCompleted,
               },
               {
                 name: "Симметричный",
                 sub: "Без порядка · без базы",
                 r: results.symmetric,
+                completed: simulations.symmetric.hasCompleted,
               },
             ]}
           />
@@ -189,10 +219,10 @@ export default function App() {
               {(Object.keys(methodInfo) as Method[]).map((m) => (
                 <button
                   className={method === m ? "active" : ""}
-                  onClick={() => setMethod(m)}
+                  onClick={() => selectMethod(m)}
                   key={m}
                 >
-                  <b>{methodInfo[m][0]}</b>
+                  <b>{methodInfo[m][0]} {simulations[m].hasCompleted ? "✓" : ""}</b>
                   <small>{methodInfo[m][1]}</small>
                 </button>
               ))}
@@ -346,17 +376,42 @@ export default function App() {
       {!compare && (
         <div className="playbar">
           <button
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            onClick={() =>
+              updateSimulation(method, (state) => ({
+                ...state,
+                currentStep: Math.max(0, step - 1),
+                isPlaying: false,
+                hasStarted: true,
+              }))
+            }
             disabled={!step}
           >
             ← Назад
           </button>
-          <button className="play" onClick={() => setPlaying(!playing)}>
+          <button
+            className="play"
+            onClick={() =>
+              updateSimulation(method, (state) => ({
+                ...state,
+                isPlaying: !state.isPlaying,
+                hasStarted: true,
+              }))
+            }
+          >
             {playing ? "Ⅱ Пауза" : "▶ Воспроизвести"}
           </button>
           <button
             onClick={() =>
-              setStep((s) => Math.min(result.steps.length - 1, s + 1))
+              updateSimulation(method, (state) => {
+                const nextStep = Math.min(result.steps.length - 1, step + 1);
+                return {
+                  ...state,
+                  currentStep: nextStep,
+                  isPlaying: false,
+                  hasStarted: true,
+                  hasCompleted: nextStep === result.steps.length - 1,
+                };
+              })
             }
             disabled={step === result.steps.length - 1}
           >
@@ -364,8 +419,13 @@ export default function App() {
           </button>
           <button
             onClick={() => {
-              setStep(0);
-              setPlaying(false);
+              updateSimulation(method, (state) => ({
+                ...state,
+                currentStep: 0,
+                isPlaying: false,
+                hasStarted: false,
+                hasCompleted: false,
+              }));
             }}
           >
             ↻
