@@ -8,9 +8,10 @@ import { referenceDecomposition } from "./math/referenceDecomposition";
 import { symmetricDecomposition } from "./math/symmetricDecomposition";
 import { common, sumFactors } from "./math/calculateCommon";
 const initial: GroupInput[] = [
-  { id: "a", name: "A", share1: 0.3, ctr1: 0.03, share2: 0.4, ctr2: 0.029 },
-  { id: "b", name: "B", share1: 0.5, ctr1: 0.01, share2: 0.4, ctr2: 0.011 },
-  { id: "c", name: "C", share1: 0.2, ctr1: 0.05, share2: 0.2, ctr2: 0.048 },
+  { id: "a", name: "A", share1: 0.19, ctr1: 0.035, share2: 0.14, ctr2: 0.03 },
+  { id: "b", name: "B", share1: 0.28, ctr1: 0.02, share2: 0.33, ctr2: 0.022 },
+  { id: "c", name: "C", share1: 0.3, ctr1: 0.024, share2: 0.16, ctr2: 0.02 },
+  { id: "d", name: "D", share1: 0.23, ctr1: 0.05, share2: 0.37, ctr2: 0.047 },
 ];
 type Method = "sequential" | "reference" | "symmetric";
 type MethodSimulationState = {
