@@ -113,7 +113,7 @@ nav button.active {
   margin: -28px auto 110px;
   padding: 0 28px;
   display: grid;
-  grid-template-columns: 375px 1fr;
+  grid-template-columns: 440px 1fr;
   gap: 22px;
   align-items: start;
   position: relative;
@@ -160,7 +160,7 @@ nav button.active {
 .data-head,
 .data-row {
   display: grid;
-  grid-template-columns: 0.9fr repeat(4, 1.1fr) 22px;
+  grid-template-columns: 0.9fr repeat(5, 1.1fr) 22px;
   gap: 5px;
 }
 .data-head {
@@ -188,6 +188,19 @@ nav button.active {
 .data-row input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
   appearance: none;
+}
+.average-ctr {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 8px 4px;
+  border: 1px solid #e2e4de;
+  border-radius: 6px;
+  background: #f0f1ec;
+  color: #56635d;
+  font-family: "DM Mono";
+  font-size: 11px;
+  white-space: nowrap;
 }
 .delete {
   border: 0;
