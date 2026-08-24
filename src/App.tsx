@@ -305,11 +305,6 @@ export default function App() {
                   </span>
                   <h2>{result.steps[step].title}</h2>
                 </div>
-                <div className="exact">
-                  {Math.abs(sumFactors(result.factors) - c.delta) < 1e-12
-                    ? "✓ Точное разложение"
-                    : "⚠ Расхождение"}
-                </div>
               </div>
               <FlowVisual
                 groups={groups}

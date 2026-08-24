@@ -589,6 +589,7 @@ nav button.active {
 }
 .label {
   text-anchor: middle;
+  font-size: 7.5px;
 }
 .bar-group rect {
   fill: #496e62;
@@ -714,24 +715,6 @@ td {
 th {
   color: #6d7872;
 }
-.choose-title {
-  margin: 30px 0 10px;
-}
-.choices {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.choices article {
-  background: #e6e8e1;
-  border-radius: 10px;
-  padding: 18px;
-}
-.choices p {
-  font-size: 12px;
-  color: #5e6a64;
-  line-height: 1.5;
-}
 .compare + .x {
   display: none;
 }
@@ -778,9 +761,6 @@ th {
   }
   .playbar .progress {
     display: none;
-  }
-  .choices {
-    grid-template-columns: 1fr;
   }
   .check {
     flex-direction: column;
